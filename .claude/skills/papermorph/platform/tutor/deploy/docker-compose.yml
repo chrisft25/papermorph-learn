@@ -1,0 +1,15 @@
+# cd tools/tutor/deploy && DOMAIN=learn.example.com docker compose up -d --build
+services:
+  app:
+    build: { context: ../../.., dockerfile: tools/tutor/deploy/Dockerfile }
+    restart: unless-stopped
+    volumes: ["./data:/data"]            # users, progress, notes, chats, encrypted keys, backups (back this folder up)
+    # environment: [ "TUTOR_RUNNER=off" ]   # uncomment to disable Python cells for everyone
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment: [ "DOMAIN=${DOMAIN:?set DOMAIN}" ]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy_data:/data"]
+    depends_on: [app]
+volumes: { caddy_data: {} }

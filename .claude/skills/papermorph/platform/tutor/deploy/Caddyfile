@@ -1,0 +1,6 @@
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8780 {
+		flush_interval -1   # stream the tutor's answers as they are written
+	}
+}

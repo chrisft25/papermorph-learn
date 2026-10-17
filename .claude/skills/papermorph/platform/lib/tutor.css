@@ -1,0 +1,63 @@
+/* Tutor side panel (book-level). Dark board, ink #ece8dc; coral/blue/violet/amber as in qviz. */
+#tutorBtn { position: fixed; right: 14px; bottom: 14px; z-index: 50; background: #1b2a25; color: #ece8dc; border: 1px solid #3a5249; border-radius: 22px; padding: 9px 16px; font: 600 14px/1 "Avenir Next", Arial, sans-serif; cursor: pointer; }
+#tutorBtn:hover { background: #24372f; }
+#tutor { position: fixed; top: 0; right: 0; bottom: 0; width: 440px; z-index: 60; display: none; flex-direction: column; background: #0f1613; color: #ece8dc; border-left: 1px solid #2a3b35; font: 15px/1.5 "Avenir Next", Arial, sans-serif; }
+#tutor.open { display: flex; }
+#tutor header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #2a3b35; }
+#tutor header b { flex: 1; font-size: 15px; }
+#tutor button, #tutor select { background: #1b2a25; color: #ece8dc; border: 1px solid #34493f; border-radius: 6px; padding: 4px 9px; font: inherit; font-size: 13px; cursor: pointer; }
+#tutor button:hover { background: #24372f; }
+#tutor button:disabled { opacity: .4; cursor: default; }
+#tChip { padding: 6px 12px; font-size: 12.5px; color: #f0b45a; border-bottom: 1px solid #1d2b26; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#tLog { flex: 1; overflow-y: auto; padding: 12px; }
+#tLog .m { margin: 0 0 14px; }
+#tLog .u { background: #1b2a25; border-radius: 10px; padding: 8px 11px; margin-left: 36px; white-space: pre-wrap; }
+#tLog .a p { margin: 0 0 9px; } #tLog .a ul, #tLog .a ol { margin: 0 0 9px; padding-left: 22px; }
+#tLog .a h3, #tLog .a h4 { margin: 12px 0 6px; font-size: 15px; color: #bba8ee; }
+#tLog code { background: #1b2a25; border-radius: 4px; padding: 1px 5px; font: 13px ui-monospace, "SF Mono", Menlo, monospace; }
+#tLog pre { background: #0a100d; border: 1px solid #243630; border-radius: 8px; padding: 9px 11px; overflow-x: auto; margin: 0 0 9px; }
+#tLog pre code { background: none; padding: 0; }
+#tLog table { border-collapse: collapse; margin: 0 0 9px; font-size: 13.5px; } #tLog td, #tLog th { border: 1px solid #2a3b35; padding: 3px 8px; }
+#tLog .mj svg { vertical-align: middle; color: #ece8dc; } #tLog .mjd { display: block; text-align: center; margin: 6px 0 10px; overflow-x: auto; }
+#tLog .viz { background: #0a100d; border: 1px solid #243630; border-radius: 8px; padding: 8px; margin: 0 0 10px; overflow-x: auto; }
+#tLog .viz svg { max-width: 100%; height: auto; display: block; }
+#tLog .viz .cap { font-size: 12.5px; color: #9aa89f; margin-top: 4px; }
+#tLog .note { font-size: 12.5px; color: #9aa89f; margin: 0 0 8px; }
+#tLog .err { color: #f08c7a; }
+#tLog .cite { color: #86c9e8; }
+#tForm { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #2a3b35; align-items: flex-end; }
+#tIn { flex: 1; resize: none; max-height: 140px; background: #1b2a25; color: #ece8dc; border: 1px solid #34493f; border-radius: 8px; padding: 8px 10px; font: inherit; }
+#tHint { padding: 0 12px 8px; font-size: 12px; color: #7f9187; }
+@media (max-width: 700px) { #tutor { width: 100%; } }
+#tOpts { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 6px 12px; border-bottom: 1px solid #1d2b26; font-size: 12px; color: #9aa89f; }
+#tOpts label { display: flex; align-items: center; gap: 5px; }
+#tOpts select { padding: 2px 5px; font-size: 12px; }
+#tQuick { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 0; border-top: 1px solid #2a3b35; }
+#tQuick button { border-radius: 14px; font-size: 12.5px; padding: 3px 10px; color: #86c9e8; }
+#tForm { border-top: 0; padding-top: 8px; }
+#tNotes { flex: 1; overflow-y: auto; padding: 12px; }
+#tNotes .nbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; } #tNotes .nbar b { flex: 1; }
+#tNotes .note-card { border: 1px solid #243630; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+#tNotes .nh { font-size: 12.5px; color: #f0b45a; display: flex; gap: 6px; align-items: center; } #tNotes .nh button { margin-left: auto; padding: 0 6px; }
+#tNotes .nq { font-size: 13px; color: #9aa89f; margin: 4px 0; font-style: italic; }
+#tNotes .a p { margin: 0 0 8px; } #tNotes .a h3, #tNotes .a h4 { font-size: 14px; color: #bba8ee; margin: 8px 0 4px; }
+#tNotes .mj svg { color: #ece8dc; vertical-align: middle; }
+#tLog .foot { margin-top: 2px; } #tLog .foot button { background: none; border: 0; color: #7f9187; font-size: 12px; padding: 0; } #tLog .foot button:hover { color: #f0b45a; }
+a.jump { color: #f0b45a; text-decoration: none; border-bottom: 1px dotted #f0b45a; }
+.quiz { margin-bottom: 10px; } .quiz .qq { font-weight: 600; margin-bottom: 5px; }
+.qopt { display: block; width: 100%; text-align: left; margin: 0 0 4px; padding: 5px 9px !important; border-radius: 6px; }
+.qopt.ok { background: #1f4a37 !important; border-color: #4caf80 !important; } .qopt.bad { background: #4a2a26 !important; border-color: #f08c7a !important; }
+.quiz .why { font-size: 13px; color: #9aa89f; margin: 2px 0 6px; }
+#tOpts .info { border-radius: 50%; width: 17px; height: 17px; padding: 0; font: italic 700 11px/15px Georgia, serif; color: #86c9e8; }
+#tInfo { padding: 8px 12px; font-size: 12.5px; color: #cfd6cf; border-bottom: 1px solid #1d2b26; background: #121b18; }
+#tInfo div { margin-top: 5px; } #tInfo span { color: #f0b45a; font-weight: 600; }
+.cell { padding: 0 !important; overflow: hidden; }
+.ccode { display: block; width: 100%; box-sizing: border-box; background: #0a100d; color: #ece8dc; border: 0; border-bottom: 1px solid #243630; padding: 9px 11px; font: 12.5px/1.45 ui-monospace, "SF Mono", Menlo, monospace; resize: vertical; white-space: pre; overflow: auto; tab-size: 4; }
+.cbar { display: flex; gap: 6px; padding: 6px 8px; align-items: center; }
+.cbar .creset { margin-left: auto; }
+.cres { padding: 0 8px 6px; } .cout { margin: 0 0 6px !important; max-height: 240px; overflow: auto; font-size: 12px; } .cout.err { color: #f08c7a; }
+.cimg { max-width: 100%; border-radius: 6px; margin-bottom: 4px; display: block; }
+#tLog .circ-open { margin: -4px 0 10px; font-size: 12px; }
+.fey { border: 1px solid #bba8ee !important; } .grade b.s { font-size: 22px; color: #f0b45a; } .grade ul { margin: 4px 0; padding-left: 20px; } .grade .gok { color: #8fd6b0; } .grade .ggap { color: #f4a48c; }
+#tMic.rec { background: #f08c7a; color: #0f1613; }
+#tutor header { flex-wrap: wrap; } #tutor header b { min-width: 60px; }
