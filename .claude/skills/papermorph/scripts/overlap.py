@@ -111,7 +111,7 @@ async def main():
     o = ap.parse_args()
     args, step, jout, only, base = o.chapters, o.step, o.json, set(o.beat), o.url.rstrip("/") + "/"
     async with async_playwright() as p:
-        b = await p.firefox.launch(firefox_user_prefs={"media.autoplay.default": 0})
+        b = await p.firefox.launch(firefox_user_prefs={"media.autoplay.default": 0, "media.volume_scale": "0.0"})
         pg = await b.new_page(viewport={"width": 1440, "height": 900})
         errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
         allres = {}

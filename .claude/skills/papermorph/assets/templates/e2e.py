@@ -35,7 +35,7 @@ CARD = r"""
 async def main():
     async with async_playwright() as p:
         ff = os.environ.get("BROWSER") == "firefox"
-        b = await (p.firefox.launch(firefox_user_prefs={"media.autoplay.default": 0}) if ff else p.chromium.launch(args=["--autoplay-policy=no-user-gesture-required"]))
+        b = await (p.firefox.launch(firefox_user_prefs={"media.autoplay.default": 0, "media.volume_scale": "0.0"}) if ff else p.chromium.launch(args=["--autoplay-policy=no-user-gesture-required", "--mute-audio"]))
         pg = await b.new_page(viewport={"width": 1440, "height": 900})
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))

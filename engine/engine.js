@@ -1849,6 +1849,8 @@ try { captions = localStorage.getItem('captions') === '1'; } catch {}
 function setCaptions(on) {
   captions = on;
   $('bCC').setAttribute('aria-pressed', String(on));
+  $('frame').classList.toggle('cc-on', on);   // lets a book reserve room for captions (see fit)
+  dispatchEvent(new Event('resize'));
   try { localStorage.setItem('captions', on ? '1' : '0'); } catch {}
 }
 setCaptions(captions);
@@ -1910,7 +1912,11 @@ document.addEventListener('keydown', e => {
 // Mouse clicks should not leave focus on a control, so Enter and Space keep meaning "check" and "play".
 $('frame').addEventListener('mousedown', e => { if (e.target.closest('button, [tabindex]')) e.preventDefault(); });
 $('bHelp').onclick = toggleHelp;
-const fit = () => document.documentElement.style.setProperty('--k', Math.min(innerWidth / 1640, (innerHeight - (innerWidth <= 700 ? 120 : 0)) / 1000));
+// The frame is 960 high unless a book's CSS makes it taller (e.g. a caption band); --phone-extra: room below it on a phone.
+const fit = () => {
+  const f = $('frame'), extra = parseFloat(getComputedStyle(f).getPropertyValue('--phone-extra')) || 0;
+  document.documentElement.style.setProperty('--k', Math.min(innerWidth / 1640, (innerHeight - (innerWidth <= 700 ? 120 + extra : 0)) / (f.offsetHeight + 40)));
+};
 addEventListener('resize', fit);
 fit();
 

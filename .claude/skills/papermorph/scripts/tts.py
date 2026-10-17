@@ -12,7 +12,8 @@ timings cover English. Both need ffmpeg/ffprobe.
 Narration text may contain [[mark]] tags placed before a word. The output
 timings.js records each clip's duration and the time (seconds) at which the
 word after every mark starts, so page animations can wait for that word,
-plus one caption cue per sentence. Only beats whose text or voice changed are
+plus one caption cue per sentence. An optional "say" object maps shown words to the spelling the voice
+should read ({"CNOT": "si-not"}); captions and marks keep the shown words. Only beats whose text or voice changed are
 regenerated; spoken word times are cached, so caption and mark rules can change
 without new audio.
 
@@ -138,20 +139,50 @@ def split_marks(raw):
     return "".join(clean), marks
 
 
-def time_at(clean, words):
-    """Return f(pos): start time of the first spoken word at or after char pos."""
+def respell(clean, say):
+    """Apply the narration's "say" lexicon (shown word -> spelling the voice reads) to whole words.
+
+    Returns the spoken text and a function mapping a char position in it back to the clean text,
+    so marks and captions keep the shown spelling while the voice hears the respelling."""
+    if not say:
+        return clean, lambda pos: pos
+    pattern = re.compile("|".join(rf"(?<!\w){re.escape(k)}(?!\w)" for k in sorted(say, key=len, reverse=True)))
+    spoken, segs, last = [], [], 0   # segs: (spoken start, spoken end, clean start, clean end) of each respelling
+    for m in pattern.finditer(clean):
+        spoken.append(clean[last:m.start()])
+        start = sum(map(len, spoken))
+        spoken.append(say[m.group(0)])
+        segs.append((start, start + len(say[m.group(0)]), m.start(), m.end()))
+        last = m.end()
+    spoken.append(clean[last:])
+
+    def to_clean(pos):
+        shift = 0
+        for s0, s1, c0, c1 in segs:
+            if pos < s0:
+                break
+            if pos < s1:
+                return c0
+            shift = c1 - s1
+        return pos + shift
+    return "".join(spoken), to_clean
+
+
+def time_at(clean, words, spoken=None, to_clean=lambda pos: pos):
+    """Return f(pos): start time of the first spoken word at or after char pos of the clean text."""
+    text = clean if spoken is None else spoken
     cursor, located = 0, []
     for t, w in words:
-        i = clean.find(w, cursor)
+        i = text.find(w, cursor)
         if i < 0:
             continue
-        located.append((i, t))
+        located.append((to_clean(i), t))
         cursor = i + len(w)
     return lambda pos: next((round(t, 3) for i, t in located if i >= pos), None)
 
 
-def mark_times(clean, marks, words):
-    at, out = time_at(clean, words), {}
+def mark_times(clean, marks, words, spoken=None, to_clean=lambda pos: pos):
+    at, out = time_at(clean, words, spoken, to_clean), {}
     for name, pos in marks.items():
         out[name] = at(pos)
         if out[name] is None:
@@ -159,9 +190,9 @@ def mark_times(clean, marks, words):
     return out
 
 
-def caption_cues(clean, words):
+def caption_cues(clean, words, spoken=None, to_clean=lambda pos: pos):
     """One cue per sentence: [start seconds, sentence]."""
-    at, cues, start = time_at(clean, words), [], 0
+    at, cues, start = time_at(clean, words, spoken, to_clean), [], 0
     for m in list(re.finditer(r"[.?!]\s+", clean)) + [None]:
         end = m.end() if m else len(clean)
         text = clean[start:end].strip()
@@ -207,8 +238,9 @@ async def main(src, out_dir):
         mp3 = out_dir / f"{beat}.mp3"
         old = cache.get(beat)
         clean, marks = split_marks(raw)
+        spoken, to_clean = respell(clean, spec.get("say"))
         tag = "" if engine == "edge" else f"{engine}|"   # Edge keys stay as they were, so its audio is kept
-        key = hashlib.sha1(f"{tag}{voice}|{rate}|{clean}".encode()).hexdigest()
+        key = hashlib.sha1(f"{tag}{voice}|{rate}|{spoken}".encode()).hexdigest()
         # Existing caches included [[marks]] in the key; reuse an unchanged old beat once,
         # then save its spoken-text key so future mark edits do not regenerate audio.
         legacy_key = hashlib.sha1(f"{voice}|{rate}|{raw}".encode()).hexdigest()
@@ -223,10 +255,11 @@ async def main(src, out_dir):
             clip = tmp
         try:
             if not reusable:
-                words = (kokoro_beat(clean, voice, rate, clip) if engine == "kokoro"
-                         else await edge_beat(beat, clean, voice, rate, clip, out_dir))
+                words = (kokoro_beat(spoken, voice, rate, clip) if engine == "kokoro"
+                         else await edge_beat(beat, spoken, voice, rate, clip, out_dir))
             entry = {"key": key, "dur": duration(clip), "words": words,
-                     "marks": mark_times(clean, marks, words), "cues": caption_cues(clean, words)}
+                     "marks": mark_times(clean, marks, words, spoken, to_clean),
+                     "cues": caption_cues(clean, words, spoken, to_clean)}
             if tmp:
                 tmp.replace(mp3)
                 print(f"{beat}: synthesized")

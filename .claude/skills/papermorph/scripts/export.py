@@ -45,7 +45,7 @@ async def main(a):
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     scale = a.height / 900
     async with async_playwright() as p:
-        b = await p.chromium.launch()
+        b = await p.chromium.launch(args=["--mute-audio"])
         # The page fits a 1640 x 1000 frame at scale 1: the 1600 x 900 stage, rendered at the requested height.
         pg = await b.new_page(viewport={'width': 1640, 'height': 1000}, device_scale_factor=scale)
         errs = []

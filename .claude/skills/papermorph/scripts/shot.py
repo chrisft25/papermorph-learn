@@ -20,7 +20,7 @@ from PIL import Image
 async def main(a):
     a.out.mkdir(parents=True, exist_ok=True)
     async with async_playwright() as p:
-        b = await p.chromium.launch()
+        b = await p.chromium.launch(args=["--mute-audio"])
         pg = await b.new_page(viewport={"width": 1600, "height": 960})
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))

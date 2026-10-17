@@ -39,6 +39,7 @@ const Contents = (() => {
     return text.replace(/\{(\w+)\}/g, (placeholder, name) => name in vars ? vars[name] : placeholder);
   }
   const $ = id => document.getElementById(id);
+  const LABEL = /^\d+[a-z]$/;   // label of an inserted chapter, e.g. '24b'
   const id = n => 'ch' + String(n).padStart(2, '0');
   const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const HUES = ['#f4a48c', '#86c9e8', '#f3c95c', '#e8a0c8', '#8fd6b0', '#bba8ee', '#f0b45a'];
@@ -59,32 +60,42 @@ const Contents = (() => {
       const saved = JSON.parse(localStorage.getItem(key) || '{}');
       if (saved && typeof saved === 'object' && !Array.isArray(saved)) P = saved;
     } catch {}
-    return { last: P.last, done: new Set(Array.isArray(P.done) ? P.done.filter(n => Number.isInteger(n) && n > 0) : []) };
+    // Inserted chapters carry a label id such as '24b' (a string); the lessons' engine prunes those from `done`, so a chapter
+    // page may also keep them in a side key `<key>:ids` ({ done: ['24b'] }).
+    let X = {};
+    try { X = JSON.parse(localStorage.getItem(key + ':ids') || '{}') || {}; } catch {}
+    const ok = n => (Number.isInteger(n) && n > 0) || (typeof n === 'string' && LABEL.test(n));
+    const lst = a => Array.isArray(a) ? a.filter(ok) : [];
+    return { last: ok(P.last) ? P.last : undefined, done: new Set([...lst(P.done), ...lst(X.done)]) };
   }
 
   // The chapter cards, unit by unit, with progress, the header count, the cover's meta line and its resume button.
   // A unit's optional third entry { unit, chapter, sample } numbers it from elsewhere in the book; a sample chapter,
   // made to show another look, is not counted with the book's chapters.
   function contents(units, start, hues, P) {
-    let n = start.chapter - 1, total = 0, i = 0;   // i staggers the entrance, in reading order
+    let n = start.chapter - 1, total = 0, labelled = 0, i = 0;   // i staggers the entrance, in reading order
     const samples = new Set();
     $('units').innerHTML = units.map(([name, chs, o = {}], u) => {
       if (o.chapter) n = o.chapter - 1;
       return `<section class="unit" style="--c:${hues[u % hues.length]};--i:${i++}">${Units.header(u, translate('unit', { n: o.unit ?? u + start.unit }) + (o.sample ? translate('sampleUnit') : ''), name)}<div class="grid">` +
-        chs.map(([t, min]) => { n++; if (o.sample) samples.add(n); else total++;
-          const cls = 'ch' + (P.done.has(n) ? ' done' : '') + (P.last === n ? ' last' : '');
-          return `<a class="${cls}" id="${id(n)}" href="${id(n)}/" style="--i:${i++}"><b>${n}</b><span>${esc(t)}</span><small>${translate('minutes', { n: min })}</small></a>`;
+        chs.map(([t, min, num, label]) => {
+          // [title, minutes, number?, label?]: a label ('24b') gives an inserted chapter its own id and card text without moving the numbering
+          if (label) { if (num != null) n = num; } else n = num ?? n + 1;
+          const key = label || n;
+          if (o.sample) samples.add(n); else { total++; if (label && P.done.has(label)) labelled++; }
+          const cls = 'ch' + (P.done.has(key) ? ' done' : '') + (P.last === key ? ' last' : '');
+          return `<a class="${cls}" id="${id(key)}" href="${id(key)}/" style="--i:${i++}"><b>${key}</b><span>${esc(t)}</span><small>${translate('minutes', { n: min })}</small></a>`;
         }).join('') + '</div></section>';
     }).join('');
     // A unit's sketch draws itself the first time the unit scrolls into view.
     Units.watch();
-    const finished = [...P.done].filter(k => k >= start.chapter && k <= n && !samples.has(k)).length;
+    const finished = [...P.done].filter(k => k >= start.chapter && k <= n && !samples.has(k)).length + labelled;
     $('prog').innerHTML = finished ? translate('finished', { done: `<b>${finished}</b>`, n: total }) : translate('chapterCount', { n: total });
     $('meta').textContent = translate('meta', {
       chapters: translate('metaChapters', { n: total }),
       samples: samples.size ? translate('metaSamples', { n: samples.size }) : '',
       units: translate('metaUnits', { n: units.filter(x => !x[2]?.sample).length }) });
-    const last = Number.isInteger(P.last) && $(id(P.last));
+    const last = P.last != null && $(id(P.last));
     if (last) {
       const r = $('resume');
       r.hidden = false;
@@ -157,7 +168,7 @@ const Contents = (() => {
     });
   }
 
-  // units: [[unit title, [[chapter title, minutes], ...], { unit, chapter, sample }?], ...]. Chapters are numbered in
+  // units: [[unit title, [[chapter title, minutes, number?, label?], ...], { unit, chapter, sample }?], ...]. Chapters are numbered in
   // order from start (a book whose scope starts mid-way keeps the original numbers). hues: one colour per unit, cycling.
   function book({ units, start = { unit: 1, chapter: 1 }, hues = HUES, progressKey, ink } = {}) {
     translatePage();

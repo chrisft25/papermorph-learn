@@ -22,7 +22,7 @@ async ([i, t, ms]) => {
 """
 async def main(ch, out, base):
     async with async_playwright() as p:
-        b = await p.firefox.launch(firefox_user_prefs={"media.autoplay.default": 0})
+        b = await p.firefox.launch(firefox_user_prefs={"media.autoplay.default": 0, "media.volume_scale": "0.0"})
         pg = await b.new_page(viewport={"width": 1512, "height": 982})
         await pg.goto(f"{base}{ch}/?beat=0&t=0"); await pg.wait_for_timeout(800)
         await pg.evaluate(SETUP)
