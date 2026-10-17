@@ -39,6 +39,11 @@
       const lv = ls.getItem(k), sv = ME.items[k];
       if (sv === undefined) adopt[k] = lv;
       else if (k.startsWith('learn:')) { try { if (JSON.parse(lv).updated > JSON.parse(sv).updated) adopt[k] = lv; } catch {} }
+      else if (k.startsWith('animebook:progress:')) {   // finished chapters: union of both copies, the browser's 'last' wins
+        try { const x = JSON.parse(lv), y = JSON.parse(sv), m = { ...y, ...x, done: [...new Set([...(y.done || []), ...(x.done || [])])] }; if (x.last === undefined) m.last = y.last; adopt[k] = JSON.stringify(m); setI(k, adopt[k]); } catch {}
+      } else if (k.startsWith('tutor-notes:')) {   // saved notes: keep the server's, add the browser's that it lacks
+        try { const x = JSON.parse(lv), y = JSON.parse(sv), have = new Set(y.map(n => n.id)), m = [...y, ...x.filter(n => !have.has(n.id))]; if (m.length !== y.length) { adopt[k] = JSON.stringify(m); setI(k, adopt[k]); } } catch {}
+      }
     }
     setI('sync-user', ME.user);
     Object.entries(ME.items).forEach(([k, v]) => { if (!(k in adopt)) setI(k, v); });
@@ -64,8 +69,9 @@
   const EPOCH = 'platform-1', bk = (location.pathname.match(/^\/([^/]+)\//) || [])[1];
   window.LEARN_EPOCH = EPOCH;
   if (bk) try {
-    if (localStorage.getItem(`learn-epoch:${bk}`) !== EPOCH) {
-      ['learn:' + bk, 'flow:' + bk, `animebook:progress:/${bk}/`].forEach(k => localStorage.removeItem(k));
+    const mark = localStorage.getItem(`learn-epoch:${bk}`);
+    if (mark !== EPOCH) {   // in login mode a missing marker means a NEW account: never wipe the progress the browser just adopted
+      if (!(HOSTED && mark === null)) ['learn:' + bk, 'flow:' + bk, `animebook:progress:/${bk}/`].forEach(k => localStorage.removeItem(k));
       localStorage.setItem(`learn-epoch:${bk}`, EPOCH);
     }
   } catch {}

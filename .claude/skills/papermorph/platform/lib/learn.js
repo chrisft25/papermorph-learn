@@ -365,7 +365,26 @@ function onAct(e) {
 }
 
 /* ---------- boot ---------- */
-function boot() { rollover(); mountChip(); if (CH) startTracking(); badges(); }
+/* ---------- cover: finished chapters also come from the learning state (the mastery map's data) ---------- */
+function reconcileCover() {
+  const done = Object.entries(S.seen).filter(([, r]) => r.done).map(([c]) => c);
+  if (!done.length) return;
+  const key = 'animebook:progress:' + new URL('.', location.href).pathname;   // the contents page's own key (see contents.js)
+  try {
+    const p = JSON.parse(localStorage.getItem(key) || '{}') || {}, ids = JSON.parse(localStorage.getItem(key + ':ids') || '{}') || {};
+    p.done = Array.isArray(p.done) ? p.done : []; ids.done = Array.isArray(ids.done) ? ids.done : []; let ch = 0;
+    for (const c of done) {
+      const m = /^ch(\d+)([a-z]?)$/.exec(c); if (!m) continue;
+      if (!m[2]) { if (!p.done.includes(+m[1])) { p.done.push(+m[1]); ch++; } } else if (!ids.done.includes(m[1] + m[2])) { ids.done.push(m[1] + m[2]); ch++; }
+    }
+    if (ch) { localStorage.setItem(key, JSON.stringify(p)); localStorage.setItem(key + ':ids', JSON.stringify(ids)); }
+  } catch {}
+  let marked = 0;
+  for (const c of done) { const el = document.getElementById(c); if (el && el.classList.contains('ch') && !el.classList.contains('done')) { el.classList.add('done'); marked++; } }
+  const prog = document.getElementById('prog');
+  if (marked && prog) { const cards = document.querySelectorAll('#units a.ch'), n = document.querySelectorAll('#units a.ch.done').length; prog.innerHTML = tr(`<b>${n}</b> de ${cards.length} terminados`, `<b>${n}</b> of ${cards.length} finished`); }
+}
+function boot() { rollover(); mountChip(); if (CH) startTracking(); else reconcileCover(); badges(); }
 if (document.body) boot(); else addEventListener('DOMContentLoaded', boot);
 window.Learn = {
   xp, pip, toast, confetti, noteAsk, open, generateCards, exportGuide, pull, addCards, addCard,
