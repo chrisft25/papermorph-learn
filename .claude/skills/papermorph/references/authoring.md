@@ -67,3 +67,9 @@ New types are welcome when the content calls for one; each needs keyboard play (
 - Follow the agreed chapter scope and order. Verify facts, calculations and answers actually used in the finished lesson; correct or replace source errors and note them in `books/<book>/chapters/chNN.md` for the user.
 - Check worked examples as the subject, not only as arithmetic (a push on someone standing on the ground is not the net force).
 - Use the notation and rounding in `style.json` (`look.notation`). Record new shared decisions there.
+
+## What the learning platform reads from a chapter
+
+If the book uses the platform ([platform.md](platform.md)), every `books/<book>/chapters/chNN.md` carries: the beat table (`| id | seconds | what changes | marks |`), a `## Glossary` two-column table (exact heading),
+and `## Notes for the tutor` (definitions, formulas with a one-line reading, two or three worked examples with numbers, common misconceptions, links to practice, source citations such as `slug p61`). The tutor, the
+study guide, the review cards and the mastery map are built from these plus the narration and its timings; stable, meaningful beat ids make scene links and per-scene mastery work.

@@ -13,6 +13,12 @@
 You've seen Opus 5.5 one-shot videos.
 This Skill takes it further: books you can explore, listen to, and interact with.
 
+> **This fork (papermorph-learn)** keeps everything below and adds a **learning platform** around the books, so people can *learn* from them and not only watch them:
+> per-user login, an AI tutor next to every lesson (answers in your language, searches your sources and cites them, draws diagrams, plots and graphs locally, quizzes you, grades your own explanations),
+> daily goals and streaks, XP and badges, spaced-repetition review, a mastery map, runnable Python cells, a multi-language interface, a multi-agent chapter workflow with a leftover finder, and ready-to-run
+> deployment files. Start with [`platform.md`](.claude/skills/papermorph/references/platform.md). Install: `npx skills add chrisft25/papermorph-learn --skill papermorph --agent claude-code`, then in Claude Code run `/papermorph`
+> (ask it to "install the learning platform" once a book exists). Upstream: [DozenTwelve/Papermorph](https://github.com/DozenTwelve/Papermorph) (MIT); this fork keeps its license and history.
+
 <p align="center">
   <a href="https://papermorph.diamonddoge.org/">Explore the live bookshelf →</a>
   ·
@@ -33,7 +39,7 @@ PDF -> A short conversation (style.json) -> Storyboards -> Narration -> Animatio
 
 The Skill starts by asking: it finds your PDF, says what the book is, suggests a chapter to try and an animation tier, and offers options at every step, so you can just pick the recommended one. Your choices are saved in `style.json`, the style every later chapter is made against.
 
-**Today:** Built with Opus 5.5, and tested with other models (see [Models](#models)). No image models, multilingual support, or BGM yet.
+**Today:** Built with Opus 5.5, and tested with other models (see [Models](#models)). No image models or BGM yet. Multi-language: one narration language per book, a switchable interface (Spanish and English included, more through a small table; see [`i18n.md`](.claude/skills/papermorph/references/i18n.md)).
 
 ## Roadmap
 
@@ -49,7 +55,8 @@ Along the way, the bookshelf grows and new Skills are released.
 Install in your project directory:
 
 ```bash
-npx skills add DozenTwelve/Papermorph --skill papermorph --agent claude-code
+npx skills add chrisft25/papermorph-learn --skill papermorph --agent claude-code   # this fork (platform included)
+# or the original: npx skills add DozenTwelve/Papermorph --skill papermorph --agent claude-code
 ```
 
 In Claude Code with Opus 5.5, run:

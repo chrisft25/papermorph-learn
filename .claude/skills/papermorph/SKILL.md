@@ -1,13 +1,15 @@
 ---
 name: papermorph
-description: Make or edit animated, narrated, interactive web books from reference PDFs. Use for book planning, storyboards, chapter animation and exercises, narration, and cover and contents pages, including "make the next chapter" or "fix this animation". Deliver runnable static book files; bookshelf design, bookshelf registration and hosting are separate tasks.
+description: Make or edit animated, narrated, interactive web books from reference PDFs or notes, and wrap them in a multi-user learning platform (login, AI tutor with sources and local diagrams, streaks and XP, spaced-repetition review, mastery map, Python cells, multi-language interface). Use for book planning, storyboards, chapter animation and exercises, narration, cover and contents pages, installing or deploying the learning platform, and running the multi-agent chapter workflow, including "make the next chapter" or "fix this animation". Deliver runnable book files and, when asked, the platform server; bookshelf design and registration are separate tasks.
 ---
 
 # Papermorph
 
 Each chapter is a short animated lesson film: the picture carries the explanation, the narration says it, and quick checks and practice happen inside the picture. Good means **alive** (things act and change with weight and timing), **composed** (each moment reads as one picture, text beside what it names), **true** (motion, labels and numbers agree at every moment) and **smooth** (it plays without stutter, Firefox included). Technically a chapter is one 1600×900 SVG stage plus a player; **beats** pair narration clips with timed actions.
 
-What the picture should be depends on the book and on the user, so the work starts with a conversation ([intake.md](references/intake.md)) that ends in `style.json`, the book's agreed style. Every chapter is made against it. Then read the reference for the technique in use: [diagrams.md](references/diagrams.md) (symbols and diagrams that change), [scenes.md](references/scenes.md) (illustrated scenes, actors, camera), [assets.md](references/assets.md) (shared components, images, sprites), [authoring.md](references/authoring.md) (chapter shape, narration, questions), [engine.md](references/engine.md), [review.md](references/review.md), [site.md](references/site.md).
+This fork adds a **learning platform** around the books ([platform.md](references/platform.md)): per-user login, an AI tutor beside every lesson, daily goals and streaks, review cards, a mastery map, runnable Python cells and a multi-language interface ([i18n.md](references/i18n.md)), plus a proven multi-agent way to produce many chapters ([agents.md](references/agents.md)). The platform is optional: a book works without it.
+
+What the picture should be depends on the book and on the user, so the work starts with a conversation ([intake.md](references/intake.md)) that ends in `style.json`, the book's agreed style. Every chapter is made against it. Then read the reference for the technique in use: [diagrams.md](references/diagrams.md) (symbols and diagrams that change), [scenes.md](references/scenes.md) (illustrated scenes, actors, camera), [assets.md](references/assets.md) (shared components, images, sprites), [authoring.md](references/authoring.md) (chapter shape, narration, questions), [engine.md](references/engine.md), [review.md](references/review.md), [site.md](references/site.md); for the platform and the team workflow: [platform.md](references/platform.md), [deploy.md](references/deploy.md), [i18n.md](references/i18n.md), [agents.md](references/agents.md).
 
 Follow the pipeline forward, entering at the requested stage for existing work. User requests override defaults. Re-create explanations, examples and drawings; keep source PDFs, page images and extracted text outside the static output folder and out of version control (`.gitignore`: `*.pdf`, `books/*/pages/`). Deliver a self-contained book folder with a cover, contents, chapters and local preview instructions.
 
@@ -19,11 +21,14 @@ books/<book>/
   pages/chNN/text.md, *.png    extracted reference material (private)
   style.json                  the agreed style every chapter anchors to (assets/templates/style.json)
   chapters.md                 chapter map and status
-  chapters/chNN.md            storyboard, errata, feedback
+  chapters/chNN.md            storyboard, errata, feedback; with `## Glossary` and `## Notes for the tutor` for the platform
+  tutor.md                    optional guidance appended to the tutor's prompt (subject conventions, how to explain)
+  sources/*.txt               private source text with `=== [pN] ===` page markers: what the tutor searches and cites
   images/                     inbox, SOURCES.md, image-requests.md, processing scripts
   review/chNN/                storyboard sheets, strips, check output
 content/<book>/chNN/           narration.<lang>.json and TTS cache
-tools/<book>/                 tests and evidence scripts
+tools/<book>/                 tests and evidence scripts (e2e_chNN.py)
+tools/tutor/                  the platform server (installed by scripts/platform_install.py; data/ is private)
 site/<book>/                   the static book (only this is delivered)
   index.html, unit-art.js      cover + contents, unit sketches
   lib/engine.*, volume.*,      the engine (player, cover/contents, unit headers), copied into the book by
@@ -43,7 +48,8 @@ Start with intake whenever `books/<book>/style.json` does not exist yet; reuse a
 2. **Intake.** Follow [intake.md](references/intake.md): find the PDF with the user, say what the book is, agree on one chapter to try and a tier, settle the look the way that tier needs, and write `style.json`.
 3. **Initialize.** Follow [site.md](references/site.md#start-a-book-folder); build agreed shared components once into the book's library ([assets.md](references/assets.md)) and list them in `style.json`.
 4. **Pilot.** Make the chosen chapter through the chapter loop and deliver it for the user's judgement. Fold their feedback into `style.json` and record the chapter under `approved`.
-5. **Remaining chapters and finish**, when the user wants the whole book: write `chapters.md`, produce chapters sequentially (see *Context*), complete cover text, contents and unit sketches using [site.md](references/site.md). Deliver the static book folder, its entry URL for local preview and any unresolved issues.
+5. **Remaining chapters and finish**, when the user wants the whole book: write `chapters.md`, produce chapters sequentially or two at a time (see *Context* and [agents.md](references/agents.md)), complete cover text, contents and unit sketches using [site.md](references/site.md). Deliver the static book folder, its entry URL for local preview and any unresolved issues.
+6. **Learning platform** (when the user wants login, a tutor, progress or sharing): `python3 SKILL/scripts/platform_install.py <book>`, then follow [platform.md](references/platform.md): sources and `tutor.md`, create users, run `tools/tutor/run-local.sh`, and for sharing [deploy.md](references/deploy.md). Re-run the installer after updating the skill; it only overwrites platform files.
 
 ## Chapter loop
 
@@ -56,7 +62,7 @@ Start with intake whenever `books/<book>/style.json` does not exist yet; reuse a
 
 ## Context
 
-- Keep intake and the pilot in the main conversation. Afterwards, use one fresh subagent per chapter sequentially when available; otherwise run the same loop in the current agent with file-based state.
+- Keep intake and the pilot in the main conversation. Afterwards, use fresh subagents per chapter (at most two in flight) following the roles in [agents.md](references/agents.md): the strongest model plans and writes content, a coding model builds the page, a small model runs the mechanical checks and the leftover finder; otherwise run the same loop in the current agent with file-based state.
 - A worker needs little besides this Skill and `style.json`: the user's words, the look, the approved chapters to watch and read, the element library. A brief adds the chapter number, its pages and any current user request. The worker returns files, delivery result, errata and new elements or decisions in a few lines; the coordinator registers it.
 - Read only the reference needed for the current step. Use the engine API and inspect individual functions when needed; copy assets rather than reading their full source as instructions.
 - Keep `style.json` current and short. Chapter status, errata and historical feedback stay in `chapters.md` and `chapters/chNN.md`.

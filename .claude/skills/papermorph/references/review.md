@@ -35,3 +35,19 @@ Adapt `assets/templates/e2e.py` into `tools/<book>/e2e_chNN.py`: it checks playb
 After scoring changes, check a wrong first try stays recorded after revisiting and a restart clears it; after progress changes, check book isolation and missing or malformed stored data. Fix engine bugs at the engine source and copy them to the books with `scripts/engine.py`; book-specific settings stay in each book's `lib/book.css`.
 
 Test details: keyboard first (Enter checks, Esc leaves a box, press Esc before S, R replays on the finish card); a page opened with `?beat=` is not started, so start it before pressing keys; `seek(i, false)` stops before the old panel's fade, so seek playing or evaluate past it; compare text in lower case (CSS uppercases kickers); avoid assertions on totals that grow with the book; Python's server lacks Range requests, so let audio play rather than setting `currentTime`.
+
+## Leftovers (things still on the stage after they should be gone)
+
+Required for every chapter, in both modes, both must exit 0 (run from the project root, dev server up):
+
+```sh
+uv run --with playwright SKILL/scripts/leftovers.py --book <book> --ch chNN             # scene changes: what survives a panel() change
+uv run --with playwright SKILL/scripts/leftovers.py --book <book> --within --ch chNN    # inside a beat: hides ignored, forgotten, reappearing, strays
+```
+
+`--all` checks every chapter with a page; `--url` points at the dev server (default `http://localhost:8766/<book>/`). Reports and annotated
+screenshots go to `books/<book>/review/chNN/leftovers*/`. The checker answers the chapter's questions from `tools/<book>/e2e_chNN.py` (keep its
+`ANSWERS`/`R`/`L` tables complete), so an incomplete e2e hides later beats. Rules that prevent most findings: never let a `pop()`/`show()` end after
+the `hide()` of the same element starts (hide at `>= t + .5` after `pop(x, t)`); hide every element of a loop; draw answer effects into the beat panel
+or the question layer, never the persistent scene; mark intentional carries with `data-keep="why"`; two tweens on one property of one element must not
+end in the wrong order (the root cause of "stuck" pieces). Look at the screenshots, not only the counts.
