@@ -109,6 +109,24 @@ function inline(s) {
     .replace(/\(((?:[A-Za-z][\w-]*)(?: [A-Za-z][\w-]*)? p\d+(?:[–-]\d+)?)\)/g, '(<span class="cite">$1</span>)');
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => keep[+i]);
 }
+
+// Markdown table row -> cells. A '|' inside $math$ or `code` stays in its cell (kets like $|0\rangle$), '\|' is a literal bar; if a
+// stray '$' leaves math open at the end of the row, fall back to a plain split so one odd cell cannot swallow the others.
+function splitRow(r) {
+  r = r.trim(); if (r.startsWith('|')) r = r.slice(1); if (r.endsWith('|') && !r.endsWith('\\|')) r = r.slice(0, -1);
+  const run = smart => {
+    const out = []; let cur = '', math = false, code = false;
+    for (let i = 0; i < r.length; i++) {
+      const c = r[i];
+      if (c === '\\' && r[i + 1] === '|') { cur += math ? '\\|' : '|'; i++; continue; }   // inside math '\\|' is LaTeX's double bar
+      if (c === '\\' && i + 1 < r.length) { cur += c + r[i + 1]; i++; continue; }
+      if (smart) { if (c === '`') code = !code; else if (c === '$' && !code) math = !math; }
+      if (c === '|' && !math && !code) { out.push(cur); cur = ''; } else cur += c;
+    }
+    out.push(cur); return { out, open: math || code };
+  };
+  const a = run(true); return (a.open ? run(false) : a).out;
+}
 function md(src) {
   const out = [], lines = src.split('\n'); let i = 0, para = [];
   const flush = () => { if (para.length) { out.push(`<p>${inline(para.join(' '))}</p>`); para = []; } };
@@ -140,7 +158,7 @@ function md(src) {
     if (/^\|.*\|\s*$/.test(l) && /^\|[\s:|-]+\|\s*$/.test(lines[i + 1] || '')) {
       flush(); const rows = [];
       while (i < lines.length && /^\|.*\|\s*$/.test(lines[i])) rows.push(lines[i++]);
-      const cells = r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => inline(c.trim()));
+      const cells = r => splitRow(r).map(c => inline(c.trim()));
       out.push(`<table><tr>${cells(rows[0]).map(c => `<th>${c}</th>`).join('')}</tr>${rows.slice(2).map(r => `<tr>${cells(r).map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`); continue;
     }
     para.push(l); i++;

@@ -80,6 +80,7 @@ FORMAT: Markdown; put the JSON or SVG of a visual block on the lines AFTER the o
 - ```plot {"title":"...","fns":[{"fn":"sin(x)","label":"sin"}],"x":[-6.3,6.3],"y":[-1.5,1.5]}``` function graphs; fn may use x, numbers, + - * / ^ ( ), sin cos tan asin acos atan sinh cosh tanh exp ln (natural log) log (base 10) log2 sqrt abs floor ceil round sign min max pow, and the constants pi, e and tau. Implicit multiplication (2x) is fine. y is optional.
 - ```graph {"nodes":["a","b","c"],"edges":[["a","b","label"],["b","c"]],"directed":true}``` small node-link graphs.
 - ```svg <svg viewBox="0 0 400 240">...</svg>``` your own drawing: shapes, paths, text and gradients only; scripts, event handlers, images, foreign objects and external references are removed. Palette for the dark board: ink #ece8dc, coral #f4a48c, blue #86c9e8, violet #bba8ee, amber #f0b45a, no background.
+In Markdown tables the character | separates columns: inside a cell write bars of kets, absolute values and norms with \\lvert / \\rvert (e.g. $\\lvert x\\rvert$), not with |.
 Never invent numbers: compute them (python cell) or label them as illustrative.
 
 GROUNDING: use the "chapter pack" below for what the lesson says; for detail or verification use search_sources / read_source and cite like (hundt p61). If something is not in the pack or the sources, say so and mark it as general knowledge. Do not cite what you did not consult.

@@ -238,13 +238,31 @@ function guideMd(g) {
   if (g.weak.length) L.push(`## ${tr('Escenas por reforzar', 'Scenes to reinforce')}`, '', ...g.weak.map(w => `- ${w.title} (${Math.round(w.m * 100)}%) — ${g.ch}/?beat=${w.i}`), '');
   return L.join('\n');
 }
+
+// Markdown table row -> cells. A '|' inside $math$ or `code` stays in its cell (kets like $|0\rangle$), '\|' is a literal bar; if a
+// stray '$' leaves math open at the end of the row, fall back to a plain split so one odd cell cannot swallow the others.
+function splitRow(r) {
+  r = r.trim(); if (r.startsWith('|')) r = r.slice(1); if (r.endsWith('|') && !r.endsWith('\\|')) r = r.slice(0, -1);
+  const run = smart => {
+    const out = []; let cur = '', math = false, code = false;
+    for (let i = 0; i < r.length; i++) {
+      const c = r[i];
+      if (c === '\\' && r[i + 1] === '|') { cur += math ? '\\|' : '|'; i++; continue; }   // inside math '\\|' is LaTeX's double bar
+      if (c === '\\' && i + 1 < r.length) { cur += c + r[i + 1]; i++; continue; }
+      if (smart) { if (c === '`') code = !code; else if (c === '$' && !code) math = !math; }
+      if (c === '|' && !math && !code) { out.push(cur); cur = ''; } else cur += c;
+    }
+    out.push(cur); return { out, open: math || code };
+  };
+  const a = run(true); return (a.open ? run(false) : a).out;
+}
 function mdLite(md) {
   const out = [], ls = md.split('\n'); let i = 0;
   while (i < ls.length) {
     const l = ls[i];
     if (/^#{1,3} /.test(l)) { const n = l.match(/^#+/)[0].length; out.push(`<h${n}>${rich(l.replace(/^#+ /, ''))}</h${n}>`); i++; }
     else if (/^- /.test(l)) { const it = []; while (i < ls.length && /^- /.test(ls[i])) it.push(`<li>${rich(ls[i++].slice(2))}</li>`); out.push(`<ul>${it.join('')}</ul>`); }
-    else if (/^\|/.test(l)) { const rows = []; while (i < ls.length && /^\|/.test(ls[i])) rows.push(ls[i++]); const cell = r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => rich(c.trim())); out.push(`<table><tr>${cell(rows[0]).map(c => `<th>${c}</th>`).join('')}</tr>${rows.slice(2).map(r => `<tr>${cell(r).map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`); }
+    else if (/^\|/.test(l)) { const rows = []; while (i < ls.length && /^\|/.test(ls[i])) rows.push(ls[i++]); const cell = r => splitRow(r).map(c => rich(c.trim())); out.push(`<table><tr>${cell(rows[0]).map(c => `<th>${c}</th>`).join('')}</tr>${rows.slice(2).map(r => `<tr>${cell(r).map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`); }
     else if (!l.trim()) i++;
     else { const p = []; while (i < ls.length && ls[i].trim() && !/^(#{1,3} |- |\|)/.test(ls[i])) p.push(ls[i++]); out.push(`<p>${rich(p.join(' '))}</p>`); }
   }
