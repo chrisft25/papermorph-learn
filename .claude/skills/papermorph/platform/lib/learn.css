@@ -39,3 +39,6 @@
 #lPrint { display: none; }
 @media print { body > *:not(#lPrint) { display: none !important; } #lPrint { display: block !important; background: #fff; color: #111; font: 12pt/1.45 Georgia, serif; padding: 0; } #lPrint h1 { font-size: 20pt; } #lPrint h2 { font-size: 14pt; margin-top: 16pt; border-bottom: 1px solid #999; } #lPrint h3 { font-size: 12pt; } #lPrint table { border-collapse: collapse; } #lPrint td, #lPrint th { border: 1px solid #999; padding: 2pt 6pt; } #lPrint .lmj svg { color: #111; vertical-align: middle; } #lPrint code { font-size: 10pt; background: #eee; } }
 .goal button { margin-left: 6px; }
+
+/* cover: the finished-chapters count sits next to the book title (the right side is taken by the language pill and the progress chip) */
+#contents .top .prog { margin-left: 0; }
